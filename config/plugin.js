@@ -2,7 +2,17 @@
 
 // had enabled by egg
 // exports.static = true;
-exports.mysql = {
+// exports.mysql = {
+//   enable: true,
+//   package: 'egg-mysql',
+// };
+
+exports.sequelize = {
   enable: true,
-  package: 'egg-mysql',
+  package: 'egg-sequelize',
+};
+
+exports.validate = {
+  enable: true,
+  package: 'egg-validate',
 };
