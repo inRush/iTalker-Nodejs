@@ -2,35 +2,65 @@
  * @Author: hwj
  * @Date: 2017-07-23 12:56:28
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-25 00:04:48
+ * @Last Modified time: 2017-07-28 20:55:39
  */
 'use strict';
+const Response = require('../model/api/base/response');
+const AccountRsp = require('../model/api/account/accountRsp');
 
 module.exports = app => {
   class UserController extends app.Controller {
-    async index() {
-      const t = await this.ctx.model.transaction();
-      try {
-        const user = await this.ctx.model.User.create(
-          {
-            name: 'inrush2',
-            phone: '18158655782',
-            password: 'inrush2',
-            sex: 1,
-          },
-          { transaction: t }
-        );
-        await t.commit();
-        this.ctx.body = user;
-        this.ctx.status = 200;
-      } catch (e) {
-        await t.rollback();
-        this.ctx.status = 500;
-        console.log(e);
+    /**
+     * 用户进行登录操作
+     */
+    async login() {
+      this.ctx.status = 200;
+      const { phone, password } = this.ctx.request.body;
+      if (!phone || !password) {
+        this.ctx.body = Response.buildParameterError();
+        return;
+      }
+
+      const user = await this.ctx.service.user.login(phone, password);
+      if (user) {
+        const rsp = new AccountRsp(user);
+        this.ctx.body = Response.buildOk(rsp);
+      } else {
+        this.ctx.body = Response.buildLoginError();
       }
     }
 
-    async create() {}
+    /**
+     * 创建用户
+     */
+    async create() {
+      this.ctx.status = 200;
+      try {
+        const { phone, password, name } = this.ctx.request.body;
+        let user = await this.ctx.service.user.findByPhone(phone);
+        if (user) {
+          this.ctx.body = Response.buildHaveAccountError();
+          return;
+        }
+
+        user = await this.ctx.service.user.findByName(name);
+        if (user) {
+          this.ctx.body = Response.buildHaveNameError();
+          return;
+        }
+
+        user = await this.ctx.service.user.register(phone, password, name);
+        if (user) {
+          const rsp = new AccountRsp(user);
+          this.ctx.body = Response.buildOk(rsp);
+        } else {
+          this.ctx.body = Response.buildRegisterError();
+        }
+      } catch (e) {
+        e.status = 500;
+        throw e;
+      }
+    }
   }
   return UserController;
 };

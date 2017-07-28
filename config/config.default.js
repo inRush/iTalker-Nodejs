@@ -6,26 +6,7 @@ module.exports = appInfo => {
   // should change to your own
   config.keys = appInfo.name + '_iTalker_inrush';
 
-  // add your config here
-  // config.mysql = {
-  //   client: {
-  //     // host
-  //     host: '127.0.0.1',
-  //     // port
-  //     port: '3306',
-  //     // username
-  //     user: 'root',
-  //     // password
-  //     password: '',
-  //     // database
-  //     database: 'italker',
-  //   },
-  //   // load into app, default is open
-  //   app: true,
-  //   // load into agent, default is close
-  //   agent: false,
-  // };
-
+  // 配置数据库信息
   config.sequelize = {
     dialect: 'mysql', // support: mysql, mariadb, postgres, mssql
     database: 'italker_test',
@@ -34,5 +15,14 @@ module.exports = appInfo => {
     username: 'root',
     password: '',
   };
+
+  // 设置中间件
+  config.middleware = [ 'errorHandler', 'trim' ];
+
+  // 开启调试端口
+  config.proxyworker = {
+    port: 10086,
+  };
+
   return config;
 };

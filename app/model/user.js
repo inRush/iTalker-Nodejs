@@ -2,18 +2,18 @@
  * @Author: hwj
  * @Date: 2017-07-23 12:56:23
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-24 23:16:56
+ * @Last Modified time: 2017-07-25 16:24:47
  */
 'use strict';
 
 module.exports = app => {
-  const { STRING, INTEGER, DATE, UUID, UUIDV4, NOW } = app.Sequelize;
+  const { STRING, INTEGER, DATE, UUIDV4, NOW } = app.Sequelize;
 
   const User = app.model.define(
     'User',
     {
       id: {
-        type: UUID,
+        type: STRING,
         primaryKey: true,
         defaultValue: UUIDV4,
       },
@@ -51,16 +51,6 @@ module.exports = app => {
       pushId: {
         type: STRING,
       },
-      createAt: {
-        type: DATE,
-        allowNull: false,
-        defaultValue: NOW,
-      },
-      updateAt: {
-        type: DATE,
-        allowNull: false,
-        defaultValue: NOW,
-      },
       lastReceivedAt: {
         type: DATE,
         allowNull: false,
@@ -69,7 +59,7 @@ module.exports = app => {
     },
     {
       tableName: 'TB_USER',
-      timestamps: false,
+      underscored: false,
     }
   );
 
