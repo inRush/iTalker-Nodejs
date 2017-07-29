@@ -2,7 +2,7 @@
  * @Author: hwj
  * @Date: 2017-07-26 17:42:05
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-28 21:37:54
+ * @Last Modified time: 2017-07-29 18:20:14
  */
 'use strict';
 const jwt = require('jsonwebtoken');
@@ -49,21 +49,84 @@ module.exports = app => {
     }
 
     /**
+     * 绑定用户的设备Id
+     * @param {User} user 当前的用户
+     * @param {String} pushId 设备Id
+     * @return {User} 绑定后的用户
+     */
+    async bind(user, pushId) {
+      if (!pushId) {
+        return null;
+      }
+
+      // 判断有没有其他的用户绑定了这个pushId
+      // 避免出现推送的混乱
+      return await app.transaction(async t => {
+        // 创建一个用户
+        pushId = pushId.toLocaleLowerCase();
+        const users = await app.model.User.findAll({
+          where: {
+            pushId,
+            id: {
+              $ne: user.id,
+            },
+          },
+        });
+
+        for (const key in users) {
+          if (users.hasOwnProperty(key)) {
+            const u = users[key];
+            app.model.User.update(
+              { pushId: null },
+              { where: { id: u.id }, transaction: t }
+            );
+          }
+        }
+        if (pushId === user.pushId) {
+          return user;
+        }
+        if (user.pushId) {
+          // TODO 给之前的设备推送退出的消息
+        }
+
+        // 更新用户的pushId
+        user.pushId = pushId;
+        const result = await app.model.User.update(
+          { pushId },
+          { where: { id: user.id }, transaction: t }
+        );
+        if (result > 0) {
+          return user;
+        }
+        return null;
+      });
+    }
+
+    /**
      * 根据电话号码查询用户
-     * @param {String} p 电话号码
+     * @param {String} phone 电话号码
      * @return {User} 查询到的用户
      */
-    async findByPhone(p) {
-      return await app.model.User.findOne({ where: { phone: p } });
+    async findByPhone(phone) {
+      return await app.model.User.findOne({ where: { phone } });
     }
 
     /**
      * 根据name查询用户
-     * @param {String} n 用户名
+     * @param {String} name 用户名
      * @return {User} 查询到的用户
      */
-    async findByName(n) {
-      return await app.model.User.findOne({ where: { name: n } });
+    async findByName(name) {
+      return await app.model.User.findOne({ where: { name } });
+    }
+
+    /**
+     * 通过Token查询用户
+     * @param {String} token Token令牌
+     * @return {User} 查询到的用户
+     */
+    async findByToken(token) {
+      return await app.model.User.findOne({ where: { token } });
     }
 
     /**

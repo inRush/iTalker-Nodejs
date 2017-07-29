@@ -1,6 +1,4 @@
-// addMethod
 'use strict';
-
 class Validator {
   static isEmpty(obj) {
     for (const key in obj) {
@@ -15,6 +13,9 @@ class Validator {
   }
   static isNumber(number) {
     return /^[0-9]*$/.test(number);
+  }
+  static isPhone(phone) {
+    return /^1[34578]\d{9}$/.test(phone);
   }
   static match(requires, target, options) {
     for (const key in requires) {
@@ -34,31 +35,4 @@ class Validator {
     return null;
   }
 }
-
-const empty = '';
-const notEmpty = '1231';
-console.log('isEmpty: ' + Validator.isEmpty(empty));
-console.log('notEmpty: ' + Validator.isEmpty(notEmpty));
-const email = '1289110832@qq.com';
-const notEmail = '2134123123';
-console.log('isEmail: ' + Validator.isEmail(email));
-console.log('notEmail: ' + Validator.isEmail(notEmail));
-const number = 12312;
-const notNumber = 'das123';
-console.log('isNumber: ' + Validator.isNumber(number));
-console.log('notNumber: ' + Validator.isNumber(notNumber));
-const body = {
-  name: 'inrush',
-  password: 12321,
-  account: '12321',
-};
-console.log(
-  Validator.match(
-    {
-      account: 'string',
-      name: 'string',
-      password: 'string',
-    },
-    body
-  )
-);
+module.exports = Validator;

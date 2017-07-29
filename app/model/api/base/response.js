@@ -2,7 +2,7 @@
  * @Author: hwj
  * @Date: 2017-07-26 17:41:53
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-27 00:23:59
+ * @Last Modified time: 2017-07-29 17:28:16
  * 接口API统一返回规范
  */
 'use strict';
@@ -90,8 +90,21 @@ class Response {
     return new Response(1, 'ok', result);
   }
 
-  static buildParameterError() {
-    return new Response(Response.ERROR_PARAMETERS, 'Parameters Error.');
+  static buildParameterError(message) {
+    return new Response(
+      Response.ERROR_PARAMETERS,
+      `Parameters Error. ${message}`
+    );
+  }
+
+  static ckeckParameterEmptyErr(obj) {
+    for (const key in obj) {
+      const arg = obj[key];
+      if (!arg && arg !== 0) {
+        return Response.buildParameterError(`${key} is Empty`);
+      }
+    }
+    return null;
   }
 
   static buildHaveAccountError() {
@@ -108,8 +121,8 @@ class Response {
     );
   }
 
-  static buildServiceError() {
-    return new Response(Response.ERROR_SERVICE, 'Service Error.');
+  static buildServiceError(message) {
+    return new Response(Response.ERROR_SERVICE, `Service Error. ${message}`);
   }
 
   static buildNotFoundUserError(str) {
