@@ -2,12 +2,12 @@
  * @Author: hwj
  * @Date: 2017-07-23 12:56:08
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-28 21:45:02
+ * @Last Modified time: 2017-07-30 19:17:32
  */
 'use strict';
 
 module.exports = app => {
-  const { STRING, DATE, UUIDV4, NOW } = app.Sequelize;
+  const { STRING, UUIDV4 } = app.Sequelize;
 
   const UserFollow = app.model.define(
     'UserFollow',

@@ -8,7 +8,7 @@
 'use strict';
 
 module.exports = app => {
-  const { STRING, DATE, UUIDV4, NOW } = app.Sequelize;
+  const { STRING, UUIDV4 } = app.Sequelize;
 
   const Group = app.model.define(
     'Group',

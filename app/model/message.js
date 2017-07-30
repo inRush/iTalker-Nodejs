@@ -8,7 +8,7 @@
 'use strict';
 
 module.exports = app => {
-  const { STRING, INTEGER, DATE, NOW, TEXT } = app.Sequelize;
+  const { STRING, INTEGER, TEXT } = app.Sequelize;
 
   const Message = app.model.define(
     'Message',

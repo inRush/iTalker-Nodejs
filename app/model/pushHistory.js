@@ -8,7 +8,7 @@
 'use strict';
 
 module.exports = app => {
-  const { STRING, INTEGER, DATE, NOW, BLOB } = app.Sequelize;
+  const { STRING, INTEGER, DATE, BLOB } = app.Sequelize;
 
   const PushHistory = app.model.define(
     'PushHistory',
