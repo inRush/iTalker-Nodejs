@@ -2,7 +2,7 @@
  * @Author: hwj
  * @Date: 2017-07-26 17:41:53
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-29 17:28:16
+ * @Last Modified time: 2017-07-30 09:52:07
  * 接口API统一返回规范
  */
 'use strict';
@@ -95,16 +95,6 @@ class Response {
       Response.ERROR_PARAMETERS,
       `Parameters Error. ${message}`
     );
-  }
-
-  static ckeckParameterEmptyErr(obj) {
-    for (const key in obj) {
-      const arg = obj[key];
-      if (!arg && arg !== 0) {
-        return Response.buildParameterError(`${key} is Empty`);
-      }
-    }
-    return null;
   }
 
   static buildHaveAccountError() {

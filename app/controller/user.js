@@ -2,62 +2,24 @@
  * @Author: hwj
  * @Date: 2017-07-23 12:56:28
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-29 18:21:52
+ * @Last Modified time: 2017-07-30 17:29:05
  */
 'use strict';
 const Response = require('../model/api/base/response');
 const AccountRsp = require('../model/api/account/accountRsp');
-function checkRegisterParam(ctx) {
-  const { account, password, name } = ctx.request.body;
-  const res = { status: 422, result: { account, password, name } };
-  // 判断参数是否正确
-  const checkEmptyResult = Response.ckeckParameterEmptyErr(res.result);
-  if (checkEmptyResult) {
-    res.result = checkEmptyResult;
-    return res;
-  }
-  if (!ctx.helper.validator.isPhone(account)) {
-    res.result = Response.buildParameterError(
-      'Please provide correct phone number'
-    );
-    return res;
-  }
-  res.status = 0;
-  return res;
-}
 
-function checkLoginParam(ctx) {
-  const { account, password } = ctx.request.body;
-  const res = { status: 422, result: { account, password } };
-  const checkEmptyResult = Response.ckeckParameterEmptyErr(res.result);
-  if (checkEmptyResult) {
-    res.result = checkEmptyResult;
-    return res;
-  }
-  res.status = 0;
-  return res;
-}
+async function bindPushId(ctx, user, res, pushId) {
+  user = await ctx.service.user.bind(user, pushId);
 
-function checkUpdateParam(ctx) {
-  const body = ctx.request.body;
-  const userId = ctx.params.id;
-  const token = ctx.request.header.token;
-  body.userId = userId;
-  body.token = token;
-  const res = { status: 422, result: body };
-  const checkEmptyResult = Response.ckeckParameterEmptyErr(body);
-  if (checkEmptyResult) {
-    res.result = checkEmptyResult;
-    return res;
+  // 绑定失败,返回服务器异常
+  if (!user) {
+    res.status = 500;
+    res.result = Response.buildServiceError();
+    return;
   }
-  if (body.pushId) {
-    if (typeof body.pushId !== 'string') {
-      res.result = Response.buildParameterError('pushId must be a string');
-      return res;
-    }
-  }
-  res.status = 0;
-  return res;
+  // 绑定成功
+  const rsp = new AccountRsp(user, true);
+  res.result = Response.buildOk(rsp);
 }
 
 module.exports = app => {
@@ -66,85 +28,120 @@ module.exports = app => {
      * 用户进行登录操作
      */
     async login() {
-      this.ctx.status = 200;
-      const res = checkLoginParam(this.ctx);
-      if (res.status !== 0) {
+      // 校验参数
+      const res = this.ctx.validate({
+        account: { type: 'string', phone: true, require: true, noEmpty: true },
+        password: { type: 'string', require: true, noEmpty: true },
+        pushId: { type: 'string', noEmpty: true },
+      });
+      if (res.status !== 200) {
         this.ctx.status = res.status;
-        this.ctx.body = res.result;
+        this.ctx.body = Response.buildParameterError(res.result);
         return;
       }
-      const params = res.result;
 
+      const params = res.result;
+      // 登录账户
       const user = await this.ctx.service.user.login(
         params.account,
         params.password
       );
       if (user) {
-        const rsp = new AccountRsp(user);
-        this.ctx.body = Response.buildOk(rsp);
+        if (params.pushId) {
+          // 绑定成功
+          await bindPushId(this.ctx, user, res, params.pushId);
+        } else {
+          const rsp = new AccountRsp(user);
+          res.result = Response.buildOk(rsp);
+        }
       } else {
-        this.ctx.body = Response.buildLoginError();
+        res.status = 422;
+        res.result = Response.buildLoginError();
       }
+
+      this.ctx.status = res.status;
+      this.ctx.body = res.result;
     }
     /**
      * 创建用户
      */
-    async create() {
-      this.ctx.status = 200;
-      const res = checkRegisterParam(this.ctx);
-      if (res.status !== 0) {
+    async register() {
+      const res = this.ctx.validate({
+        account: { type: 'string', phone: true, require: true, noEmpty: true },
+        password: { type: 'string', require: true, noEmpty: true },
+        name: { type: 'string', require: true, noEmpty: true },
+        pushId: { type: 'string', noEmpty: true },
+      });
+      if (res.status !== 200) {
         this.ctx.status = res.status;
-        this.ctx.body = res.result;
+        this.ctx.body = Response.buildParameterError(res.result);
         return;
       }
       const params = res.result;
 
       let user = await this.ctx.service.user.findByPhone(params.account);
       if (user) {
+        this.ctx.status = 422;
         this.ctx.body = Response.buildHaveAccountError();
         return;
       }
 
       user = await this.ctx.service.user.findByName(params.name);
       if (user) {
+        this.ctx.status = 422;
         this.ctx.body = Response.buildHaveNameError();
         return;
       }
+
+      // 注册用户
       user = await this.ctx.service.user.register(
         params.account,
         params.password,
         params.name
       );
       if (user) {
-        const rsp = new AccountRsp(user);
-        this.ctx.body = Response.buildOk(rsp);
+        if (params.pushId) {
+          // 绑定成功
+          await bindPushId(this.ctx, user, res, params.pushId);
+        } else {
+          const rsp = new AccountRsp(user);
+          res.result = Response.buildOk(rsp);
+        }
       } else {
-        this.ctx.body = Response.buildRegisterError();
+        res.status = 422;
+        res.result = Response.buildRegisterError();
       }
+      this.ctx.status = res.status;
+      this.ctx.body = res.result;
     }
 
-    async update() {
-      this.ctx.status = 200;
-      const res = checkUpdateParam(this.ctx);
-      if (res.status !== 0) {
+    /**
+     * 绑定pushId
+     */
+    async bind() {
+      const token = this.ctx.headers.token;
+      // 校验参数
+      const res = this.ctx.validate({
+        pushId: { type: 'string', require: true, noEmpty: true },
+      });
+      if (res.status !== 200) {
         this.ctx.status = res.status;
-        this.ctx.body = res.result;
+        this.ctx.body = Response.buildParameterError(res.result);
         return;
       }
-      const params = res.result;
-      let user = await this.ctx.service.user.findByToken(params.token);
-      console.log(user);
-      if (user && params.pushId) {
-        user = await this.ctx.service.user.bind(user, params.pushId);
-      }
-      if (!user) {
-        this.ctx.status = 500;
-        this.ctx.body = Response.buildServiceError();
-        return;
-      }
-      const rsp = new AccountRsp(user, true);
 
-      this.ctx.body = Response.buildOk(rsp);
+      const params = res.result;
+      // 根据Token查找用户
+      const user = await this.ctx.service.user.findByToken(token);
+      if (!user) {
+        this.ctx.status = 422;
+        this.ctx.body = Response.buildAccountError();
+        return;
+      }
+      // 绑定pushId
+      await bindPushId(this.ctx, user, res, params.pushId);
+      this.ctx.status = res.status;
+      this.ctx.body = res.result;
     }
   }
   return UserController;
