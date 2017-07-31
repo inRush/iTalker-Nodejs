@@ -9,6 +9,9 @@ class Validator {
     if (Validator.isEmpty(rules)) {
       throw new Error("rules can't empty");
     }
+    if (Validator.isEmpty(rules)) {
+      throw new Error("content can't empty");
+    }
     this._rules = rules;
     this._content = content;
     this._data = {};
@@ -151,6 +154,7 @@ class Validator {
   }
 
   _checkNoEmpty(key) {
+    const data = this._content[key];
     if (typeof data === 'undefined') {
       return;
     }

@@ -2,7 +2,7 @@
  * @Author: hwj
  * @Date: 2017-07-25 14:27:46
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-29 16:44:04
+ * @Last Modified time: 2017-07-31 14:07:37
  */
 'use strict';
 const crypto = require('crypto');
@@ -28,11 +28,5 @@ module.exports = {
   base64(str) {
     return new Buffer(str).toString('base64');
   },
-  objectIsEmpty(obj) {
-    for (const name in obj) {
-      return false;
-    }
-    return true;
-  },
-  validator: Validator,
+  Validator,
 };

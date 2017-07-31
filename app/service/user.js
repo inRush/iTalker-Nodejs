@@ -2,7 +2,7 @@
  * @Author: hwj
  * @Date: 2017-07-26 17:42:05
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-29 18:20:14
+ * @Last Modified time: 2017-07-31 11:35:37
  */
 'use strict';
 const jwt = require('jsonwebtoken');
@@ -145,7 +145,7 @@ module.exports = app => {
     async updateToken(user) {
       const keys = app.config.keys;
       const token = jwt.sign({ phone: user.phone, name: user.name }, keys);
-      user.dataValues.token = token;
+      user.token = token;
       return await app.transaction(async t => {
         // 更新用户Token
         const result = await app.model.User.update(

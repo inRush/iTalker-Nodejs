@@ -2,7 +2,7 @@
  * @Author: hwj
  * @Date: 2017-07-25 14:41:41
  * @Last Modified by: hwj
- * @Last Modified time: 2017-07-27 09:39:38
+ * @Last Modified time: 2017-07-31 13:22:41
  */
 
 'use strict';
@@ -22,23 +22,5 @@ module.exports = {
       await t.rollback();
       throw e;
     }
-  },
-  /**
-   * 对class进行函数重载操作
-   * @example overloaded(ClassObject,MethodName,Function)
-   * @param {Object} object 需要进行函数重载的对象
-   * @param {String} name 重载函数的名称
-   * @param {Function} fn 重载的函数体
-   * @return {void}
-   */
-  async overloaded(object, name, fn) {
-    const old = object[name];
-    object[name] = function() {
-      if (fn.length === arguments.length) {
-        return fn.apply(this, arguments);
-      } else if (typeof old === 'function') {
-        return old.apply(this, arguments);
-      }
-    };
   },
 };
